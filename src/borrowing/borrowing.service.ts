@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { CreateBorrowingDto } from './dto/create-borrowing.dto';
 import { UpdateBorrowingDto } from './dto/update-borrowing.dto';
-import { Repository } from 'typeorm';
+import { MoreThan, Repository } from 'typeorm';
 import {
   MembersEntity,
   statusMember,
@@ -48,6 +48,7 @@ export class BorrowingService {
     const queryFindBook = await this.bookRepo.findOne({
       where: {
         code: code,
+        stock: MoreThan(0)
       },
     });
 
