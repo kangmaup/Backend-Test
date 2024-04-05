@@ -8,12 +8,10 @@ import {
 import { CreateBorrowingDto } from './dto/create-borrowing.dto';
 import { UpdateBorrowingDto } from './dto/update-borrowing.dto';
 import { MoreThan, Repository } from 'typeorm';
-import {
-  MembersEntity,
-  statusMember,
-} from 'src/members/entities/member.entity';
-import { BooksEntity } from 'src/books/entities/book.entity';
-import { BorrowingEntity } from './entities/borrowing.entity';
+import { MembersEntity, statusMember } from '../members/entities/member.entity';
+import { BooksEntity } from '../books/entities/book.entity';
+import { BorrowingEntity, statusBorrowing } from './entities/borrowing.entity';
+import * as moment from 'moment';
 
 @Injectable()
 export class BorrowingService {
@@ -23,7 +21,7 @@ export class BorrowingService {
     @Inject('BOOKS_REPOSITORY')
     private readonly bookRepo: Repository<BooksEntity>,
     @Inject('BORROWING_REPOSITORY')
-    private readonly borrowingepo: Repository<BorrowingEntity>,
+    private readonly borrowingRepo: Repository<BorrowingEntity>,
   ) {}
 
   async validateMember(userId: string) {
@@ -48,7 +46,7 @@ export class BorrowingService {
     const queryFindBook = await this.bookRepo.findOne({
       where: {
         code: code,
-        stock: MoreThan(0)
+        stock: MoreThan(0),
       },
     });
 
@@ -56,7 +54,7 @@ export class BorrowingService {
       throw new NotFoundException('Book does not exist');
     }
 
-    if (queryFindBook.stock > 0) {
+    if (queryFindBook.stock === 0) {
       throw new ForbiddenException('Book is out of stock.');
     }
 
@@ -66,8 +64,8 @@ export class BorrowingService {
   async create(userId: string, createBorrowingDto: CreateBorrowingDto) {
     const validateMember = await this.validateMember(userId);
     const validateBook = await this.validateBook(createBorrowingDto.code);
-    
-    const createBorrowing = await this.borrowingepo
+
+    const createBorrowing = await this.borrowingRepo
       .create({
         book_id: validateBook.id,
         member_id: validateMember.id,
@@ -80,7 +78,45 @@ export class BorrowingService {
       status: HttpStatus.OK,
       message: 'Success',
       data: {
-        id : createBorrowing.id
+        id: createBorrowing.id,
+      },
+    };
+  }
+
+  async createReturned(userId: string, createBorrowingDto: CreateBorrowingDto) {
+    const validateMember = await this.validateMember(userId);
+    const queryReturned = await this.borrowingRepo.findOne({
+      where: {
+        member_id: validateMember.id,
+        book: {
+          code: createBorrowingDto.code,
+        },
+      },
+      relations: {
+        book: true,
+      },
+    });
+
+    const borrowingDate = moment(queryReturned.created_at);
+    const currentDate = moment();
+    const daysDifference = currentDate.diff(borrowingDate, 'days');
+
+    if (daysDifference > 7) {
+      validateMember.status = statusMember.penalized;
+      await validateMember.save();
+    } else {
+      validateMember.status = statusMember.active;
+      await validateMember.save();
+    }
+    queryReturned.book.stock = Number(queryReturned.book.stock) + 1;
+    queryReturned.status = statusBorrowing.returned;
+    await queryReturned.book.save();
+    const savedReturn = await queryReturned.save()
+    return {
+      status: HttpStatus.OK,
+      message: 'Success',
+      data: {
+        id : savedReturn.id
       },
     };
   }

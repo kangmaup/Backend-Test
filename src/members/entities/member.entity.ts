@@ -50,23 +50,23 @@ export class MembersEntity extends BaseEntity {
     type: 'timestamp',
     default: () => 'now()',
   })
-  created_at: Date;
+  created_at?: Date;
 
   @UpdateDateColumn({
     name: 'updated_at',
     type: 'timestamp',
     default: () => 'now()',
   })
-  updated_at: Date;
+  updated_at?: Date;
 
   @DeleteDateColumn({
     name: 'deleted_at',
     type: 'timestamp',
     nullable: true,
   })
-  deleted_at: Date;
+  deleted_at?: Date;
 
   // relation
   @OneToMany(() => BorrowingEntity, (borrowing) => borrowing.member)
-  borrowings: BorrowingEntity[];
+  borrowings?: BorrowingEntity[];
 }

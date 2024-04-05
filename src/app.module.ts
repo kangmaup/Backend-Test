@@ -7,10 +7,11 @@ import { GlobalModule } from './global/global.module';
 import { BorrowingModule } from './borrowing/borrowing.module';
 import { SeederModule } from './seeder/seeder.module';
 import { AuthModule } from './auth/auth.module';
+import { CronjobModule } from './cronjob/cronjob.module';
 
 
 @Module({
-  imports: [GlobalModule, BooksModule, MembersModule, BorrowingModule, SeederModule, AuthModule, ],
+  imports: [GlobalModule, BooksModule, MembersModule, BorrowingModule, SeederModule, AuthModule, CronjobModule, ],
   controllers: [AppController],
   providers: [AppService],
 })
