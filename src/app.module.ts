@@ -8,10 +8,11 @@ import { BorrowingModule } from './borrowing/borrowing.module';
 import { SeederModule } from './seeder/seeder.module';
 import { AuthModule } from './auth/auth.module';
 import { CronjobModule } from './cronjob/cronjob.module';
+import { AlgoritmaModule } from './algoritma/algoritma.module';
 
 
 @Module({
-  imports: [GlobalModule, BooksModule, MembersModule, BorrowingModule, SeederModule, AuthModule, CronjobModule, ],
+  imports: [GlobalModule, BooksModule, MembersModule, BorrowingModule, SeederModule, AuthModule, CronjobModule, AlgoritmaModule, ],
   controllers: [AppController],
   providers: [AppService],
 })
